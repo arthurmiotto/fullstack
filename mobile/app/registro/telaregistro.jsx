@@ -1,7 +1,6 @@
-import { useRoute } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { useRouter } from 'expo-router'
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const telaregistro = ({ navigation }) => {
   const [firstName, setFirstName] = useState('');
@@ -10,50 +9,54 @@ const telaregistro = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  const router = useRouter()
+  const [registerMessage, setRegisterMessage] = useState(''); 
 
   const handleRegister = async () => {
     if (!firstName || !lastName || !email || !birthDate || !password || !confirmPassword) {
-      alert('Preencha todos os campos');
+      setRegisterMessage('Preencha todos os campos');
       return;
-  }
+    }
 
-  if (password !== confirmPassword) {
-      alert('Senha incorreta');
-      return; 
-  }
-   try {
+    if (password !== confirmPassword) {
+      setRegisterMessage('As senhas não coincidem');
+      return;
+    }
+
+    try {
       const response = await fetch('http://localhost:8000/registro/', {
-          method: 'POST',
-          headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            nome: firstName,
-            sobrenome: lastName,
-            email: email,
-            dataNascimento: birthDate,
-            senha: password
-          })
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nome: firstName,
+          sobrenome: lastName,
+          email: email,
+          dataNascimento: birthDate,
+          senha: password,
+        }),
       });
 
       if (!response.ok) {
-          throw new Error(`Erro HTTP! Status: ${response.status}`);
-      }
-      if( response.ok) {
-          router.push('/home')
+        throw new Error(`Erro HTTP! Status: ${response.status}`);
       }
 
-  } catch (error) {
+      await AsyncStorage.setItem('userName', firstName);
+      await AsyncStorage.setItem('userEmail', email);
+
+      setRegisterMessage('Parabéns, você está registrado!');
+      setTimeout(() => {
+        navigation.navigate('telalogin');
+      }, 2000); 
+    } catch (error) {
       console.error('Erro:', error);
-      return
-  } 
+      setRegisterMessage('Erro ao registrar. Tente novamente.');
+    }
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Image source={require('../../assets/images/musica.png')} style={styles.logo} />
       <Text style={styles.title}>SPOTFAKE</Text>
       <TextInput
@@ -104,24 +107,27 @@ const telaregistro = ({ navigation }) => {
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Registrar</Text>
       </TouchableOpacity>
+
+      {registerMessage ? <Text style={styles.registerMessage}>{registerMessage}</Text> : null}
+
       <TouchableOpacity onPress={() => navigation.goBack()}>
         <Text style={styles.registerText}>Voltar para Login</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: 'black',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
   },
   logo: {
-    width: 50, 
-    height: 50, 
+    width: 50,
+    height: 50,
     marginBottom: 10,
   },
   title: {
@@ -152,6 +158,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  registerMessage: {
+    fontSize: 16,
+    color: 'green',
+    marginTop: 20,
   },
   registerText: {
     fontSize: 16,

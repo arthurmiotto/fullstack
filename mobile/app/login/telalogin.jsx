@@ -1,39 +1,46 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const telalogin = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
-    if(!email || !password) {
-      alert('preencha todos os campos')
-      return
+    if (!email || !password) {
+      alert('Preencha todos os campos');
+      return;
     }
-    try{
-      const response = await fetch('http://localhost:8000/login/',{
+    try {
+      const response = await fetch('http://localhost:8000/login/', {
         method: 'POST',
         headers: {
           Accept: 'application/json',
-          'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: email,
-        senha: password
-      })
-      })
-      console.log(response)
-      if ( response.status === 404) {
-        alert('email não encontrado')
-        return
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          senha: password,
+        }),
+      });
+
+      if (response.status === 404) {
+        alert('Email não encontrado');
+        return;
       }
-      if ( response.status === 403) {
-        alert('senha incorreta')
-        return
+      if (response.status === 403) {
+        alert('Senha incorreta');
+        return;
       }
-    } catch(erro) {
-      console.log(erro)
-    } 
+
+      const userData = await response.json(); 
+      await AsyncStorage.setItem('userName', userData.nome); 
+      await AsyncStorage.setItem('userEmail', userData.email); 
+
+      navigation.navigate('telasucesso');
+    } catch (erro) {
+      console.log(erro);
+    }
   };
 
   return (
@@ -75,8 +82,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   logo: {
-    width: 125, 
-    height: 125, 
+    width: 125,
+    height: 125,
     marginBottom: 20,
   },
   title: {

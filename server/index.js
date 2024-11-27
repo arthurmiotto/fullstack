@@ -3,7 +3,7 @@ import { User, sequelize } from './db.js';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
-import fetch from 'node-fetch'; // Importando fetch
+import fetch from 'node-fetch';
 
 const app = Express();
 
